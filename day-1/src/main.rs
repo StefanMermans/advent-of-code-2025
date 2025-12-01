@@ -1,4 +1,4 @@
-use std::fs::File;
+use std::{f32::consts::E, fs::File};
 use clap::Parser;
 use std::io::{BufRead, BufReader};
 
@@ -33,10 +33,15 @@ fn main() {
             },
         };
 
-        current_number = next_number(current_number, number);
+        let (next_number, ticked_0) = next_number(current_number, number);
+        current_number = next_number;
 
         if current_number == 0 {
             count += 1;
+        }
+
+        if args.pt2  {
+            count += ticked_0;
         }
     }
 
@@ -62,8 +67,23 @@ fn input_file_reader(args: &Args) -> Result<BufReader<File>, String> {
     return Ok(BufReader::new(file));
 }
 
-fn next_number(current: i32, line_number: i32) -> i32 {
-    return (current + line_number) % 100;
+fn next_number(current: i32, line_number: i32) -> (i32, i32) {
+    let mut next = current + (line_number % 100);
+    let mut ticked_0 = line_number.abs() / 100;
+
+    if next < 0 {
+        if current != 0 {
+            ticked_0 += 1;
+        }
+        next = 100 + next;
+    } else if next > 100 {
+        if current != 0 {
+            ticked_0 += 1;
+        }
+        next = next - 100;
+    }
+    
+    return (next % 100, ticked_0);
 }
 
 
