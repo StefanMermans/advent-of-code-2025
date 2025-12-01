@@ -1,9 +1,18 @@
 use std::fs::File;
-use std::{env};
+use clap::Parser;
 use std::io::{BufRead, BufReader};
 
+#[derive(Parser, Debug)]
+#[command(version)]
+struct Args {
+    pub file_path: String,
+    #[arg(short, long, default_value_t = false, help = "Part 2 flag")]
+    pub pt2: bool,
+}
+
 fn main() {
-    let file_reader = match input_file_reader() {
+    let args = Args::parse();
+    let file_reader = match input_file_reader(&args) {
         Ok(path) => path,
         Err(e) => {
             eprintln!("{}", e);
@@ -19,7 +28,7 @@ fn main() {
             Ok(n) => n,
             Err(_) => {
                 eprintln!("Failed to parse line to number.");
-                
+
                 return;
             },
         };
@@ -44,15 +53,8 @@ fn parse_line(line: String) -> Result<i32, std::num::ParseIntError> {
     return number;
 }
 
-fn input_file_reader() -> Result<BufReader<File>, String> {
-    let args: Vec<String> = env::args().collect();
-
-     let file_path = match args.get(1) {
-        Some(path) => path.to_string(),
-        None => return Err("Please provide the input file path as a command line argument.".into()),
-    };
-
-    let file = match File::open(file_path) {
+fn input_file_reader(args: &Args) -> Result<BufReader<File>, String> {
+    let file = match File::open(&args.file_path) {
         Ok(f) => f,
         Err(e) => return Err(format!("Failed to open the specified file. {}", e)),
     };
