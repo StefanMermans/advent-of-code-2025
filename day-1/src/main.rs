@@ -1,4 +1,4 @@
-use std::{f32::consts::E, fs::File};
+use std::{fs::File, io::Error};
 use clap::Parser;
 use std::io::{BufRead, BufReader};
 
@@ -10,30 +10,15 @@ struct Args {
     pub pt2: bool,
 }
 
-fn main() {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = Args::parse();
-    let file_reader = match input_file_reader(&args) {
-        Ok(path) => path,
-        Err(e) => {
-            eprintln!("{}", e);
-            return;
-        }
-    };
+    let file_reader = input_file_reader(&args)?;
     
     let mut count = 0;
     let mut current_number = 50;
 
     for line in file_reader.lines() {
-        let number = match parse_line(line.unwrap()) {
-            Ok(n) => n,
-            Err(_) => {
-                eprintln!("Failed to parse line to number.");
-
-                return;
-            },
-        };
-
-        let (next_number, ticked_0) = next_number(current_number, number);
+        let (next_number, ticked_0) = next_number(current_number, parse_line(line?)?);
         current_number = next_number;
 
         if current_number == 0 {
@@ -46,6 +31,8 @@ fn main() {
     }
 
     println!("Total 0's: {}", count);
+
+    return Ok(());
 }
 
 fn parse_line(line: String) -> Result<i32, std::num::ParseIntError> {
@@ -58,13 +45,8 @@ fn parse_line(line: String) -> Result<i32, std::num::ParseIntError> {
     return number;
 }
 
-fn input_file_reader(args: &Args) -> Result<BufReader<File>, String> {
-    let file = match File::open(&args.file_path) {
-        Ok(f) => f,
-        Err(e) => return Err(format!("Failed to open the specified file. {}", e)),
-    };
-    
-    return Ok(BufReader::new(file));
+fn input_file_reader(args: &Args) -> Result<BufReader<File>, Box<Error>> {
+    Ok(BufReader::new(File::open(&args.file_path)?))
 }
 
 fn next_number(current: i32, line_number: i32) -> (i32, i32) {
