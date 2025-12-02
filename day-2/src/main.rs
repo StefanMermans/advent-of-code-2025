@@ -1,3 +1,4 @@
+use std::collections::HashSet;
 use std::fs;
 use std::{error::Error};
 use std::ops::Range;
@@ -10,8 +11,8 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     for range in &ranges {
         for id in range.start..=range.end {
-            if !is_id_valid(id) {
-                println!("Found invalid id: {}", id);
+            if !is_id_valid(id, args.second_part) {
+                println!("id {} is invlaid", id);
                 sum += id;
             }
         }
@@ -25,18 +26,61 @@ fn main() -> Result<(), Box<dyn Error>> {
 #[command(version)]
 struct Args {
     input_file: String,
+
+    #[arg(short, long, default_value_t = false)]
+    second_part: bool,
 }
 
-fn is_id_valid(id: usize) -> bool {
-    let id = id.to_string();
+fn is_id_repeating(id: String) -> bool {
+    let mut part_size = 1;
 
-    if id.len() % 2 != 0 {
-        return true
+    while part_size < (id.len() + 1) / 2 {
+        if id.len() % part_size != 0 {
+            part_size += 1;
+            continue;
+        }
+
+        let parts_count = id.len() / part_size;
+        let mut parts: Vec<String> = Vec::new();
+        
+        
+        for part_index in 0..parts_count {
+            let start = part_index * part_size;
+            parts.push(id[start..start + part_size].to_string());
+        }
+
+        if parts
+            .iter()
+            .collect::<HashSet<_>>()
+            .into_iter()
+            .count() 
+            == 1
+         {
+            return true;
+        }
+
+        part_size += 1;
     }
 
-    let (first_half, second_half) = id.split_at(id.len() / 2);
+    return false;
+}
 
-    return first_half != second_half;
+fn is_id_valid(id: usize, part2: bool) -> bool {
+    let id = id.to_string();
+
+    if id.len() % 2 == 0 {
+        let (first_half, second_half) = id.split_at(id.len() / 2);
+    
+        if first_half == second_half {
+            return false;
+        }
+    }
+
+    if part2 {
+        return !is_id_repeating(id);
+    }
+
+    return true;
 }
 
 fn parse_to_ranges(file_path: String) -> Result<Vec<Range<usize>>, Box<dyn Error>> {
