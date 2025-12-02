@@ -12,7 +12,6 @@ fn main() -> Result<(), Box<dyn Error>> {
     for range in &ranges {
         for id in range.start..=range.end {
             if !is_id_valid(id, args.second_part) {
-                println!("id {} is invlaid", id);
                 sum += id;
             }
         }
