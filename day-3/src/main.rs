@@ -1,4 +1,4 @@
-use std::{error::Error, fs};
+use std::{error::Error, fs, num::ParseIntError};
 use clap::Parser;
 
 #[derive(Parser)]
@@ -24,7 +24,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-fn get_joltage(bank: &str, remaining: usize) -> Result<i64, Box<dyn Error>> {
+fn get_joltage(bank: &str, remaining: usize) -> Result<i64, ParseIntError> {
     let mut result = String::new();
     let mut remaining = remaining;
     let mut offset = 0;
@@ -37,7 +37,7 @@ fn get_joltage(bank: &str, remaining: usize) -> Result<i64, Box<dyn Error>> {
         remaining -= 1;
     }
 
-    return Ok(result.parse::<i64>()?);
+    return result.parse::<i64>();
 }
 
 fn batteries_to_turn_on(args: &Args) -> usize {
