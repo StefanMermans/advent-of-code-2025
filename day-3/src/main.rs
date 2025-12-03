@@ -12,11 +12,7 @@ struct Args {
 
 fn main() -> Result<(), Box<dyn Error>> {
     let args = Args::parse();
-    let mut batteries_to_turn_on: usize = 2;
-    
-    if args.second_part {
-        batteries_to_turn_on = 12;
-    }
+    let batteries_to_turn_on = batteries_to_turn_on(&args);
 
     let total_joltage = fs::read_to_string(args.input)?
         .split('\n')
@@ -34,15 +30,22 @@ fn get_joltage(bank: &str, remaining: usize) -> Result<i64, Box<dyn Error>> {
     let mut offset = 0;
     
     while remaining > 0 {
-        let slice = bank[offset..(bank.len() - remaining + 1)].to_string();
-        let slice_result = get_largest_value(slice);
-        result.push(slice_result.1);
-        offset = offset + slice_result.0 + 1;
-        
+        let slice = bank[offset..=(bank.len() - remaining)].to_string();
+        let (largest_index, largets_value)= get_largest_value(slice);
+        result.push(largets_value);
+        offset += largest_index + 1;
         remaining -= 1;
     }
 
     return Ok(result.parse::<i64>()?);
+}
+
+fn batteries_to_turn_on(args: &Args) -> usize {
+    if args.second_part {
+        return 12;
+    }
+
+    return 2;
 }
 
 fn get_largest_value(bank_slice: String) -> (usize, char) {
