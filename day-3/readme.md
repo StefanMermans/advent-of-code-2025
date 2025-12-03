@@ -7,3 +7,8 @@ cargo run -- <input-file-path>
 ```sh
 cargo run -- --second-part <input-file-path> 
 ```
+
+# How to run test
+```sh
+cargo test
+```
