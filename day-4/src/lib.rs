@@ -23,9 +23,7 @@ fn count_accessible(grid: &mut Grid, second_part: bool) -> Result<i32, Box<dyn E
 
     for y in 0..grid.rows.len() {
         for x in 0..grid.rows()[y].len() {
-            let position = grid.char_at(x as isize, y as isize);
-
-            if position != '@' {
+            if !grid.is_roll(x as isize, y as isize) {
                 continue;
             }
 
@@ -36,8 +34,6 @@ fn count_accessible(grid: &mut Grid, second_part: bool) -> Result<i32, Box<dyn E
                     extra = true;
                     grid.remove_roll(x, y);
                 }
-
-                continue;
             }
         }
     }
