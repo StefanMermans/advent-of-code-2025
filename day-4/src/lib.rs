@@ -1,5 +1,5 @@
-use std::{error::Error, fs};
 use clap::Parser;
+use std::{error::Error, fs};
 
 #[derive(Parser)]
 #[command(version)]
@@ -13,7 +13,7 @@ pub struct Args {
 pub fn compute_result(args: Args) -> Result<i32, Box<dyn Error>> {
     let input = fs::read_to_string(args.input)?;
     let mut grid = Grid::new(input);
-    
+
     return count_accessible(&mut grid, args.second_part);
 }
 
@@ -21,36 +21,25 @@ fn count_accessible(grid: &mut Grid, second_part: bool) -> Result<i32, Box<dyn E
     let mut accessible_count = 0;
     let mut extra = false;
 
-    for row_index in 0..grid.rows.len() {
-        for col_index in 0..grid.rows()[row_index].len() {
-            let position = grid.rows()[row_index][col_index];
+    for y in 0..grid.rows.len() {
+        for x in 0..grid.rows()[y].len() {
+            let position = grid.char_at(x as isize, y as isize);
 
             if position != '@' {
-                print!("{}", position);
                 continue;
             }
 
-            let rol_count = grid
-                .neighbors(col_index as isize, row_index as isize)
-                .iter()
-                .filter(|char| **char == '@')
-                .count();
-
-            if rol_count < 4 {
+            if grid.is_accessible(x as isize, y as isize) {
                 accessible_count += 1;
-                
+
                 if second_part {
                     extra = true;
-                    grid.remove_roll(col_index, row_index);
+                    grid.remove_roll(x, y);
                 }
 
-                print!("x")
-            } else {
-                print!("{}", position);
+                continue;
             }
         }
-
-        println!("")
     }
 
     if extra {
@@ -67,7 +56,10 @@ struct Grid {
 impl Grid {
     pub fn new(input_data: String) -> Self {
         Self {
-            rows: input_data.split('\n').map(|line| line.chars().collect()).collect()
+            rows: input_data
+                .split('\n')
+                .map(|line| line.chars().collect())
+                .collect(),
         }
     }
 
@@ -76,49 +68,47 @@ impl Grid {
     }
 
     pub fn char_at(&self, x: isize, y: isize) -> char {
-        if y < 0 || x < 0 {
+        if x < 0
+            || y < 0
+            || y >= self.rows.len() as isize
+            || x >= self.rows[y as usize].len() as isize
+        {
             return '.';
         }
 
-        let row_index = y as usize;
-        let col_index = x as usize;
+        return self.rows[y as usize][x as usize];
+    }
 
-        if row_index >= self.rows.len() {
-            return '.';
-        }
-
-        if col_index >= self.rows[row_index].len() {
-            return '.';
-        }
-
-        return self.rows[row_index][col_index];
+    pub fn is_roll(&self, x: isize, y: isize) -> bool {
+        return self.char_at(x, y) == '@';
     }
 
     pub fn remove_roll(&mut self, x: usize, y: usize) {
         self.rows[y][x] = '.';
     }
 
-    pub fn neighbors(&mut self, x: isize, y: isize) -> Vec<char> {
-        let mut result: Vec<char> = Vec::with_capacity(8);
+    pub fn is_accessible(&self, x: isize, y: isize) -> bool {
+        let mut adjacent_rolls = 0;
 
         for offset_x in -1..=1 {
             for offset_y in -1..=1 {
-                let new_x = x as isize + offset_x;
-                let new_y = y as isize + offset_y;
+                let new_x = x + offset_x;
+                let new_y = y + offset_y;
 
                 if new_y == y && new_x == x {
                     continue;
                 }
 
-                let value = self.char_at(new_x, new_y);
+                if self.is_roll(new_x, new_y) {
+                    adjacent_rolls += 1;
 
-                result.push(value);
+                    if adjacent_rolls >= 4 {
+                        return false;
+                    }
+                }
             }
         }
 
-        println!("{:?}", result);
-
-        result
+        true
     }
 }
-
