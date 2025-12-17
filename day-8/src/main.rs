@@ -174,11 +174,76 @@ fn part1(boxes: &mut Vec<JunctionBox>, connections_to_make: i32) -> Result<i32, 
     Ok(result)
 }
 
+struct UnionFind {
+    parents: Vec<usize>,
+    sizes: Vec<usize>,
+    components: usize,
+}
+
+impl UnionFind {
+    fn new(len: usize) -> Self {
+        Self {
+            parents: (0..len).collect(),
+            sizes: vec![1; len],
+            components: len,
+        }
+    }
+
+    fn find(&mut self, node: usize) -> usize {
+        if self.parents[node] == node {
+            return node;
+        }
+        let root = self.find(self.parents[node]);
+        self.parents[node] = root;
+        root
+    }
+
+    fn union(&mut self, a: usize, b: usize) -> bool {
+        let root_a = self.find(a);
+        let root_b = self.find(b);
+        if root_a == root_b {
+            return false;
+        }
+        if self.sizes[root_a] < self.sizes[root_b] {
+            self.parents[root_a] = root_b;
+            self.sizes[root_b] += self.sizes[root_a];
+        } else {
+            self.parents[root_b] = root_a;
+            self.sizes[root_a] += self.sizes[root_b];
+        }
+        self.components -= 1;
+        true
+    }
+}
+
+fn part2(boxes: &mut Vec<JunctionBox>) -> Result<i64, Box<dyn Error>> {
+    let mut edges = vec![];
+    for i in 0..boxes.len() {
+        for j in (i + 1)..boxes.len() {
+            edges.push((boxes[i].distance_to(&boxes[j]), i, j));
+        }
+    }
+    edges.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
+    let mut finder = UnionFind::new(boxes.len());
+    let mut last = (0, 0);
+    for (_, a, b) in edges {
+        if finder.union(a, b) {
+            last = (a, b);
+            if finder.components == 1 {
+                break;
+            }
+        }
+    }
+    Ok((boxes[last.0].x as i64) * (boxes[last.1].x as i64))
+}
+
 fn main()  -> Result<(), Box<dyn Error>> {
     let args = Args::parse();
-    let mut input = parse_input(&args.input)?;
-    
-    println!("Part 1: {}", part1(&mut input, args.connections)?);
+    let mut input_1 = parse_input(&args.input)?;
+    let mut input_2 = parse_input(&args.input)?;
+
+    println!("Part 1: {}", part1(&mut input_1, args.connections)?);
+    println!("Part 2: {}", part2(&mut input_2)?);
 
     Ok(())
 }
